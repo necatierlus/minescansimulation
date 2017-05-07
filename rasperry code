@@ -1,0 +1,150 @@
+from tkinter import *
+import tkinter.ttk as ttk
+import _thread
+import time, random
+
+import urllib, http.client
+import json,time
+from urllib.request import urlopen
+
+bsl=True
+
+root = Tk()
+y0=500
+x0=100
+yOlcek=350
+xOlcek=600
+xlabel=0
+ylabel=0
+sayac=0
+maxTurS=100
+maxYonS=10
+renkler=["ALICEBLUE","AQUAMARINE","AZURE","BISQUE","BLUE","CORAL","CORNFLOWERBLUE","DARKCYAN","DARKGOLDENROD","DARKGREEN","DARKORANGE","FORESTGREEN","FUCHSIA","GOLD","DIMGRAY","KHAKI","GREEN","LIGHTGRAY","MEDIUMBLUE","ORANGE","SALMON","SKYBLUE","TOMATO","ROYALBLUE","TURQUOISE","TEAL","LIGHTYELLOW","INDIGO","LIGHTSKYBLUE","PALEGREEN","WHEAT","YELLOWGREEN","LIGHTCORAL","HONEYDEW","YELLOW","LAWNGREEN","NAVAJOWHITE","RED"]
+
+turKatsayisi=yOlcek/maxTurS
+yonKatsayisi=xOlcek/maxYonS
+
+root.wm_title("Gömülü Sistemler Dersi, Mayın Tarama Projesi")
+canvas = Canvas(root, width=800, height=600, borderwidth=5, highlightthickness=10, bg="black")
+canvas.grid()
+
+def _create_circle(self, x, y, r, **kwargs):
+    return self.create_oval(x-r, y-r, x+r, y+r, **kwargs)
+Canvas.create_circle = _create_circle
+def koordinatlar():
+    canvas.create_line(50, 500, 750, 500, fill="white",width=3)
+    canvas.create_line(100, 100, 100, 550, fill="white",width=3)
+    canvas.create_line(740, 490, 750, 502, fill="white",width=3)
+    canvas.create_line(740, 510, 750, 500, fill="white",width=3)
+    canvas.create_line(90, 110, 100, 100, fill="white",width=3)
+    canvas.create_line(110, 110, 100, 100, fill="white",width=3)
+    for i in range(160, 750,60):
+        canvas.create_line(i,110, i, 500, fill="grey", width=1)
+        global xlabel
+        xlabel=xlabel+1
+        labelj = Label(text=str(xlabel), bg="black", fg="yellow")
+        labelj.place(x=i-5, y=520)
+    for j in range(465, 115,-35):
+        canvas.create_line(100, j, 750, j, fill="grey", width=1)
+        global ylabel
+        ylabel=ylabel+1
+        labelj = Label(text=str(ylabel), bg="black", fg="yellow")
+        labelj.place(x=70, y=j-10)
+    labelx=Label(text="X Konum",bg="black",fg="white")
+    labelx.place(x=735, y=520)
+    labely=Label(text="Y Konum",bg="black",fg="white")
+    labely.place(x=80, y=75)
+
+    labelOlcu=Label(text="X birim = 10cm",bg="black",fg="green")
+    labelOlcu.place(x=640, y=560)
+    labelOlcu=Label(text="X birim = 16cm",bg="black",fg="green")
+    labelOlcu.place(x=640, y=580)
+
+    buton=Button(text ="Başlat",bg="grey",fg="black", command = baslangic)
+    buton.place(x=500, y=570)
+
+
+def ciz(turSayisi,yonSayisi):
+    global renkler
+    if (yonSayisi % 2 == 0):
+        ykonum = y0 - (turSayisi * turKatsayisi)
+    else:
+        ykonum = (y0 - yOlcek) + (turSayisi * turKatsayisi)
+
+    xkonum = x0+(yonSayisi * yonKatsayisi)
+
+    for renk in renkler:
+        
+        canvas.create_circle(xkonum, ykonum, 10, fill=renk, outline="white",width=2)
+        time.sleep(0.4)
+
+def start():
+    _thread.start_new_thread(thread, ())
+
+def thread():
+    global bsl
+    while True:
+        if bsl:
+            params = urllib.parse.urlencode({"field1": "8", "key": "J93TNLFECQ7WI8GU"})
+            headers = {"Content-typZZe": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+            conn = http.client.HTTPConnection("api.thingspeak.com: 80")
+            try:
+                while True:
+                    conn.request("POST", " /update", params, headers)
+                    response = conn.getresponse()
+                    data = response.read()
+                    if (int(data) > 0):
+                        break
+                conn.close()
+                bsl=False
+            except:
+                print("connection failed")
+
+        response = urlopen("https://api.thingspeak.com/channels/265485/feeds/last.json?api_key=W351PFNZ52NLRGDI").read().decode(
+                    'utf8')
+        data = json.loads(response)
+        deger = int(data['field1'])
+        print(deger)
+        time.sleep(0.5)
+        if deger%10==1:
+            tursYons=(deger-1)/10
+            yonSayisi=tursYons%100
+            turSayisi = (tursYons-yonSayisi)/100
+            #yonSayisi = random.randint(0,10)
+            ciz(turSayisi,yonSayisi)
+            deger=deger-1
+            params = urllib.parse.urlencode({"field1": deger, "key": "J93TNLFECQ7WI8GU"})
+            headers = {"Content-typZZe": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+            conn = http.client.HTTPConnection("api.thingspeak.com: 80")
+            try:
+                while True:
+                    conn.request("POST", " /update", params, headers)
+                    response = conn.getresponse()
+                    data = response.read()
+                    if (int(data) > 0):
+                        break
+                conn.close()
+            except:
+                print("connection failed")
+
+
+def baslangic():
+    params = urllib.parse.urlencode({"field1": "9", "key": "J93TNLFECQ7WI8GU"})
+    headers = {"Content-typZZe": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+    conn = http.client.HTTPConnection("api.thingspeak.com: 80")
+    try:
+        while True:
+            conn.request("POST", " /update", params, headers)
+            response = conn.getresponse()
+            data = response.read()
+            if (int(data) > 0):
+                break
+        conn.close()
+    except:
+        print("connection failed")
+
+
+koordinatlar()
+
+start()
+root.mainloop()
